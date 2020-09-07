@@ -23,6 +23,10 @@ fn main() {
         .next()
         .expect("no device available");
 
+    for family in physical.queue_families() {
+        println!("id: {}, queues: {}, graphics: {}, compute: {}, transfers: {}", family.id(), family.queues_count(), family.supports_graphics(), family.supports_compute(), family.explicitly_supports_transfers());
+    }
+
     let family = physical
         .queue_families()
         .find(|&q| q.supports_compute())
@@ -50,16 +54,16 @@ fn main() {
         ..BufferUsage::none()
     };
 
-    let data = 0..16;
+    let data = 0..20;
 
-    let buffer = CpuAccessibleBuffer::from_iter(device.clone(), usage, true, data).unwrap();
+    let buffer = CpuAccessibleBuffer::from_iter(device.clone(), usage, false, data).unwrap();
 
     println!("{:?}", buffer.read().unwrap().as_ref());
 
     let shader = test::Shader::load(device.clone()).unwrap();
     // println!("{:?}", shader.module());
 
-    let specialization = ();
+    let specialization = test::SpecializationConstants { OFFSET: 200 };
 
     let pipeline = Arc::new(
         ComputePipeline::new(device.clone(), &shader.main_entry_point(), &specialization).unwrap(),
